@@ -36,8 +36,8 @@ export const LiveMonitoringPage: React.FC<LiveMonitoringPageProps> = ({ incident
   const [gridMode, setGridMode] = useState<'single' | 'quad'>('single');
   const [liveClock, setLiveClock] = useState(new Date().toISOString().substring(11, 19));
 
-  // Live Camera Demo States
-  const [demoPpeMode, setDemoPpeMode] = useState<'NO_HELMET' | 'WEARING_HELMET' | 'AUTO'>('NO_HELMET');
+  // Live Camera Demo States - Default to AUTO AI Scan
+  const [demoPpeMode, setDemoPpeMode] = useState<'NO_HELMET' | 'WEARING_HELMET' | 'AUTO'>('AUTO');
   const [isWebcamActive, setIsWebcamActive] = useState(false);
   const [webcamError, setWebcamError] = useState<string | null>(null);
   const [isLoggingIncident, setIsLoggingIncident] = useState(false);
@@ -50,10 +50,10 @@ export const LiveMonitoringPage: React.FC<LiveMonitoringPageProps> = ({ incident
     reason: string;
   }>({
     has_person: true,
-    has_helmet: false,
-    signal: 'RED_ALERT',
-    confidence: 0.94,
-    reason: 'CRITICAL HAZARD: Operator observed without mandatory OSHA 1910.135 safety hard hat.'
+    has_helmet: true,
+    signal: 'GREEN_PASS',
+    confidence: 0.96,
+    reason: 'OPTICAL CRANIAL SCAN: ANSI Z89.1 / EN 397 safety helmet compliance confirmed.'
   });
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -138,8 +138,9 @@ export const LiveMonitoringPage: React.FC<LiveMonitoringPageProps> = ({ incident
     if (!selectedCamera.startsWith('CAM-LIVE')) return;
 
     const interval = setInterval(async () => {
-      // Trigger sound beep if in NO_HELMET mode and not muted
-      if (demoPpeMode === 'NO_HELMET' && !isMuted) {
+      // Trigger sound beep ONLY when an actual violation is detected and audio is unmuted
+      const isViolation = demoPpeMode === 'NO_HELMET' || (demoPpeMode === 'AUTO' && !liveDetection.has_helmet);
+      if (isViolation && !isMuted) {
         playAlarmSound();
       }
 
@@ -174,15 +175,15 @@ export const LiveMonitoringPage: React.FC<LiveMonitoringPageProps> = ({ incident
           // Frame capture fallback
         }
       } else {
-        // Simulated frame fallback
-        const hasHelmet = demoPpeMode === 'WEARING_HELMET';
+        // Standalone simulated frame fallback: compliant unless explicitly forced to NO_HELMET
+        const hasHelmet = demoPpeMode === 'NO_HELMET' ? false : true;
         setLiveDetection({
           has_person: true,
           has_helmet: hasHelmet,
           signal: hasHelmet ? 'GREEN_PASS' : 'RED_ALERT',
-          confidence: 0.94,
+          confidence: 0.96,
           reason: hasHelmet
-            ? 'COMPLIANT: Hard hat verified on cranial vault (ANSI Z89.1).'
+            ? 'COMPLIANT: Protective safety hard hat verified on cranial vault (ANSI Z89.1).'
             : 'CRITICAL HAZARD: Operator observed without mandatory OSHA 1910.135 safety hard hat.'
         });
       }
@@ -229,7 +230,13 @@ export const LiveMonitoringPage: React.FC<LiveMonitoringPageProps> = ({ incident
   };
 
   const isLiveCam = selectedCamera.startsWith('CAM-LIVE');
-  const isRedAlert = isLiveCam && (!liveDetection.has_helmet || demoPpeMode === 'NO_HELMET');
+  const isRedAlert = isLiveCam && (
+    demoPpeMode === 'NO_HELMET'
+      ? true
+      : demoPpeMode === 'WEARING_HELMET'
+      ? false
+      : !liveDetection.has_helmet
+  );
 
   const cameras = [
     {

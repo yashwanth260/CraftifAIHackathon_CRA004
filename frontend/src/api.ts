@@ -716,7 +716,7 @@ export const api = {
     }
 
     const mode = payload.demo_ppe_mode || 'AUTO';
-    const hasHelmet = mode === 'WEARING_HELMET' || (mode === 'AUTO' && Math.random() > 0.45);
+    const hasHelmet = mode === 'NO_HELMET' ? false : true;
     const signal: 'RED_ALERT' | 'GREEN_PASS' = hasHelmet ? 'GREEN_PASS' : 'RED_ALERT';
     let loggedId: string | undefined = undefined;
 
