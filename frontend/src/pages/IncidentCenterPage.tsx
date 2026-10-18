@@ -8,16 +8,8 @@ import {
   Clock,
   Eye,
   XCircle,
-  FileText,
-  Shield,
-  Hash,
-  User,
-  History,
   X,
-  RefreshCw,
-  Image as ImageIcon,
-  Check,
-  ChevronDown
+  Image as ImageIcon
 } from 'lucide-react';
 import { api, Incident } from '../api';
 
@@ -42,15 +34,6 @@ export const IncidentCenterPage: React.FC<IncidentCenterPageProps> = ({ incident
   const [notes, setNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
 
-  useEffect(() => {
-    if (focusedId) {
-      const match = incidents.find(i => i.id === focusedId);
-      if (match) {
-        handleOpenInspection(match);
-      }
-    }
-  }, [focusedId, incidents]);
-
   const handleOpenInspection = async (inc: Incident) => {
     setSelectedIncident(inc);
     setNotes(inc.resolution_notes || inc.dismiss_reason || '');
@@ -59,9 +42,18 @@ export const IncidentCenterPage: React.FC<IncidentCenterPageProps> = ({ incident
       const details = await api.getIncidentDetails(inc.id);
       setIncidentDetails(details);
     } catch {
-      setIncidentDetails(null);
+      setIncidentDetails(inc);
     }
   };
+
+  useEffect(() => {
+    if (focusedId) {
+      const match = incidents.find(i => i.id === focusedId);
+      if (match) {
+        handleOpenInspection(match);
+      }
+    }
+  }, [focusedId, incidents]);
 
   const handleStatusChange = async (newStatus: string) => {
     if (!selectedIncident) return;
