@@ -1,0 +1,103 @@
+{
+  "ir_version": "2.1.0",
+  "pipeline_name": "ai-safety-sentinel-360",
+  "generated_at": "2026-10-18T19:15:00Z",
+  "generator": "CraftifAI PipeGen IR Builder v4.2",
+  "nodes": [
+    {
+      "id": "node_0_input",
+      "op": "VideoSourceOp",
+      "inputs": [],
+      "outputs": ["raw_frame_stream"],
+      "params": {
+        "source_type": "FILE_OR_STREAM",
+        "buffer_size": 4,
+        "drop_frames_on_backpressure": true
+      }
+    },
+    {
+      "id": "node_1_preproc",
+      "op": "LetterboxNormalizeOp",
+      "inputs": ["raw_frame_stream"],
+      "outputs": ["preprocessed_tensor", "scaling_factors"],
+      "params": {
+        "target_shape": [1, 3, 640, 640],
+        "swap_rb": true,
+        "normalize_0_1": true
+      }
+    },
+    {
+      "id": "node_2_detector",
+      "op": "TensorRTYOLOOp",
+      "inputs": ["preprocessed_tensor"],
+      "outputs": ["raw_detection_tensor"],
+      "params": {
+        "engine_path": "models/yolov8n_fp16.engine",
+        "onnx_fallback": "models/yolov8n.onnx",
+        "confidence_threshold": 0.45,
+        "target_class": 0,
+        "class_name": "person"
+      }
+    },
+    {
+      "id": "node_3_postproc",
+      "op": "NMSRescaleOp",
+      "inputs": ["raw_detection_tensor", "scaling_factors"],
+      "outputs": ["person_detections"],
+      "params": {
+        "nms_threshold": 0.45,
+        "coordinate_format": "NORMALIZED_XYXY"
+      }
+    },
+    {
+      "id": "node_4_tracker",
+      "op": "MultiObjectTrackerOp",
+      "inputs": ["person_detections"],
+      "outputs": ["tracked_people"],
+      "params": {
+        "tracker_type": "BYTE_TRACK",
+        "track_thresh": 0.5,
+        "match_thresh": 0.7
+      }
+    },
+    {
+      "id": "node_5_zone_eval",
+      "op": "PolygonContainmentOp",
+      "inputs": ["tracked_people"],
+      "outputs": ["zone_violation_events"],
+      "params": {
+        "reference_point": "BOTTOM_CENTER",
+        "dwell_time_enabled": true,
+        "zone_config": "zones.json"
+      }
+    },
+    {
+      "id": "node_6_ppe_eval",
+      "op": "PPEClassifierOp",
+      "inputs": ["tracked_people", "raw_frame_stream"],
+      "outputs": ["ppe_assessment_events"],
+      "params": {
+        "enabled": false,
+        "model_path": null,
+        "status_when_disabled": "NOT_EVALUATED"
+      }
+    },
+    {
+      "id": "node_7_event_sink",
+      "op": "JSONEventDispatcherOp",
+      "inputs": ["zone_violation_events", "ppe_assessment_events"],
+      "outputs": [],
+      "params": {
+        "http_webhook": "http://127.0.0.1:8000/api/pipeline/events",
+        "local_file": "storage/exports/pipegen_events.jsonl",
+        "retry_limit": 3
+      }
+    }
+  ],
+  "graph_integrity": {
+    "acyclic": true,
+    "unconnected_nodes": 0,
+    "entry_node": "node_0_input",
+    "exit_nodes": ["node_7_event_sink"]
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "pipeline_name": "ai-safety-sentinel-360",
+  "version": "1.0.0",
+  "description": "Industrial video perception pipeline for restricted-zone intrusion detection and PPE compliance monitoring",
+  "target_runtimes": [
+    "NVIDIA Jetson AGX Orin / Xavier (JetPack 5.x/6.x)",
+    "NVIDIA TensorRT GPU Server (Linux x86_64)",
+    "Host Edge Inference (CPU / ONNX Runtime Fallback)"
+  ],
+  "stages": [
+    {
+      "stage_id": "input_stage",
+      "type": "video_capture",
+      "supported_sources": ["file://local_path.mp4", "rtsp://camera_stream_url", "v4l2:///dev/video0"],
+      "color_format": "BGR24",
+      "target_resolution": {"width": 1280, "height": 720},
+      "target_fps": 30
+    },
+    {
+      "stage_id": "preprocessing_stage",
+      "type": "tensor_transform",
+      "resize": {"width": 640, "height": 640},
+      "normalization": {"mean": [0.0, 0.0, 0.0], "std": [255.0, 255.0, 255.0]},
+      "format": "NCHW",
+      "precision": "FP16"
+    },
+    {
+      "stage_id": "detection_stage",
+      "type": "object_detection",
+      "model_identifier": "yolov8n",
+      "class_mapping": {"0": "person"},
+      "confidence_threshold": 0.45,
+      "iou_threshold": 0.45,
+      "max_detections": 50
+    },
+    {
+      "stage_id": "tracker_stage",
+      "type": "multi_object_tracker",
+      "algorithm": "ByteTrack",
+      "track_retention_frames": 30,
+      "min_hits": 3
+    },
+    {
+      "stage_id": "zone_evaluation_stage",
+      "type": "polygon_containment",
+      "reference_point": "BOTTOM_CENTER",
+      "dwell_time_support": true,
+      "dwell_threshold_seconds": 1.0,
+      "zone_configuration_source": "zones.json"
+    },
+    {
+      "stage_id": "ppe_evaluation_stage",
+      "type": "hierarchical_classifier",
+      "model_identifier": "ppe_yolov8_nano",
+      "optional": true,
+      "supported_classes": ["helmet", "vest"],
+      "fallback_status": "NOT_EVALUATED"
+    },
+    {
+      "stage_id": "event_output_stage",
+      "type": "structured_event_sink",
+      "output_destinations": ["local_json_log", "http_rest_endpoint", "mqtt_broker_optional"],
+      "event_schema": "AI_SAFETY_SENTINEL_EVENT_V1"
+    }
+  ],
+  "constraints": {
+    "tensorrt_compilation": "Supported on NVIDIA targets with CUDA >= 12.0 and TensorRT >= 8.6",
+    "hardware_validation_status": "Awaiting NVIDIA GPU / Jetson environment for compiled engine validation",
+    "current_execution_mode": "Python / Host Runtime with Ultralytics YOLOv8 backend"
+  }
+}

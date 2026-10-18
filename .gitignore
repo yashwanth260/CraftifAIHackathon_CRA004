@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+
+# Large model weights (keep repo lightweight for Vercel & GitHub)
+*.pt
+*.onnx
+*.engine
+
+# Storage & media
+storage/uploads/*
+!storage/uploads/.gitkeep
+storage/evidence/*
+!storage/evidence/.gitkeep
+storage/exports/*
+!storage/exports/.gitkeep
+storage/*.db
+storage/*.db-journal
+
+# Node.js & Vercel
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+dist-ssr/
+*.local
+.vercel/
+frontend/.vercel/
+
+# Logs & temp
+*.log
+.env
+.DS_Store
+Thumbs.db

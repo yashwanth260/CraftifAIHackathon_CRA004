@@ -1,0 +1,15 @@
+{
+  "event_id": "pipegen_evt_9283716281",
+  "timestamp": "2026-10-18T14:30:00Z",
+  "source_id": "industrial_camera_welding_cell_01",
+  "track_id": 14,
+  "event_type": "RESTRICTED_ZONE_VIOLATION",
+  "zone_id": "zone_welding_bay_primary",
+  "severity": "HIGH",
+  "confidence": 0.94,
+  "ppe_status": "NOT_EVALUATED",
+  "evidence_reference": null,
+  "model_name": "yolov8n",
+  "inference_mode": "PIPEGEN",
+  "explanation": "Person (Track #14) crossed boundary of configured restricted zone with 1.2s dwell time."
+}

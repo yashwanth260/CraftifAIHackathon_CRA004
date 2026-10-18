@@ -1,0 +1,38 @@
+[
+  {
+    "event_id": "pipegen_valid_01",
+    "timestamp": "2026-10-18T14:32:00Z",
+    "source_id": "cam_dock_north_01",
+    "track_id": 22,
+    "event_type": "RESTRICTED_ZONE_VIOLATION",
+    "zone_id": "zone_hazardous_materials",
+    "severity": "CRITICAL",
+    "confidence": 0.96,
+    "ppe_status": "NOT_EVALUATED",
+    "evidence_reference": null,
+    "model_name": "pipegen_edge_yolov8",
+    "inference_mode": "PIPEGEN",
+    "explanation": "Person entered chemical storage perimeter without authorization."
+  },
+  {
+    "event_id": "pipegen_valid_02",
+    "timestamp": "2026-10-18T14:35:00Z",
+    "source_id": "cam_forklift_choke_02",
+    "track_id": 35,
+    "event_type": "ZONE_AND_PPE_VIOLATION",
+    "zone_id": "zone_forklift_corridor",
+    "severity": "CRITICAL",
+    "confidence": 0.91,
+    "ppe_status": "NON_COMPLIANT",
+    "evidence_reference": null,
+    "model_name": "pipegen_edge_yolov8_ppe",
+    "inference_mode": "PIPEGEN",
+    "explanation": "Pedestrian entered active forklift path without high-visibility safety vest."
+  },
+  {
+    "event_id": "pipegen_malformed_03",
+    "timestamp": "invalid_date_format",
+    "source_id": "cam_test",
+    "event_type": "UNSUPPORTED_TYPE_ERROR"
+  }
+]
